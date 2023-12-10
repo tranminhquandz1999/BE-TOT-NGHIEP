@@ -54,6 +54,63 @@ let getBodyHTMLEmail = (dataSend) => {
   }
   return result;
 };
+
+let getBodyHTMLEmailRemedy = (dataSend) => {
+  let result = "";
+  if (dataSend.language === "vi") {
+    result = `<H3>Xin chào ${dataSend.patientName}!</H3>
+<p>Bạn nhận được email thì đã đặt lịch khám bệnh online thành công</p>
+<p>Thông tin đơn thuốc/ hóa đơn được gửi trong file đính kèm. </p>
+<div>Xin chân thành cảm ơn</div>
+`;
+  }
+  if (dataSend.language === "en") {
+    result = `<H3>Dear ${dataSnd.patientName}</H3>
+<p>If you receive an email, you have booked an online medical examination appointment on Ask Dan It</p>
+<p>bla bla</p>
+<div>Sincerely thank!
+</div>
+`;
+  }
+  return result;
+};
+
+let sendAttachment = async (dataSend) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          // TODO: replace `user` and `pass` values from <https://forwardemail.net>
+          user: process.env.EMAIL_APP,
+          pass: process.env.EMAIL_APP_PASSWORD,
+        },
+      });
+      let info = await transporter.sendMail({
+        from: '"Ba la ba la ba la 👻" <tranminhquandz1999@gmail.com>', // sender address
+        to: dataSend.email, // list of receivers
+        subject: "Kết quả đặt lịch khám bệnh",
+        html: getBodyHTMLEmailRemedy(dataSend),
+        attachments: [
+          {
+            filename: `remedy-${
+              dataSend.patientId
+            }-${new Date().getTime()}.png`,
+            content: dataSend.imgBase64.split("base64,")[1],
+            encoding: "base64",
+          },
+        ],
+      });
+      resolve(true);
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 module.exports = {
   sendSimpleEmail: sendSimpleEmail,
+  sendAttachment: sendAttachment,
 };
